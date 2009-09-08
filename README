@@ -1,0 +1,4 @@
+django-livesearch
+=================
+django-livesearch using bing api. Requires django-pipes (http://wiki.github.com/mallipeddi/django-pipes)
+
