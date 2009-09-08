@@ -243,9 +243,6 @@ def mresults(request):
             for result in googleResult:
                 '''result.bresult = BossInlink.fetch(result.unescapedUrl)'''
             result.presult =BossPagedata.fetch(googleResult[0].unescapedUrl)
-            print '+++++++++++++++++++++++++++++++++++++++++'
-            print result.presult.items()
-            print '+++++++++++++++++++++++++++++++++++++++++'
 
             bingResult = BingMultiple.fetch(key_words)
             '''for result in bingResult.Web.Results:
