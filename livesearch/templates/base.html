@@ -1,0 +1,60 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+ "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+    <title>{% block title %}{% endblock %}</title>
+    <meta http-equiv="Content-Type" content="text/html;charset=utf-8" >
+    <link rel="stylesheet" href="http://yui.yahooapis.com/2.7.0/build/reset-fonts-grids/reset-fonts-grids.css" type="text/css">
+    <link rel="stylesheet" href="/media/saaskit/css/user_sites.css" type="text/css">
+    <link id="theme" rel="stylesheet" href="/media/yui-app-theme/aqua.css" type="text/css">
+	<link id="theme2" rel="stylesheet" href="/media/saaskit/css/searchmash.css" type="text/css">
+    <script src="http://yui.yahooapis.com/3.0.0pr2/build/yui/yui-min.js" type="text/javascript"></script>
+    <script src="/media/saaskit/js/yuiapp.js" type="text/javascript"></script>
+</head>
+<body>
+    <div id="doc3" class="yui-t5">
+        <div id="hd">
+            	<div id="logo">SearchSmash</div>
+        {% block search %} {% endblock %}
+            <div id="navigation">
+                <ul id="primary-navigation">
+			<li class="select"><select>
+				<option value="more">More</option>
+				<option value="options">More</option>
+				</select></li>
+             {% block navigation %}
+             {% endblock %}
+			 </ul>
+                <div class="clear"></div>
+            </div>
+        </div>
+
+        <div id="bd">
+            <div id="yui-main">
+                <div class="yui-b"><div class="yui-g">
+                    <!-- Basic block -->
+                    <div class="block">
+                        <div class="hd">
+                            <h2>{% block pageheaderinfo %}{%endblock%}</h2>
+                        </div>
+                        <div class="bd">
+
+                            {% block mainresult %}{%endblock%}
+
+                            {% block paginator %}{%endblock%}
+                    </div>
+
+                </div></div>
+            </div>
+            <div id="sidebar" class="yui-b">
+                {% block sidebar%} {% endblock %}
+            </div>
+        </div>
+
+        <div id="ft">
+            <p class="inner">Copyright &copy; 2009 Blah Your Website</p>
+        </div>
+
+    </div>
+</body>
+</html>

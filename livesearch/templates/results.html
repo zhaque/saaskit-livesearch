@@ -1,0 +1,70 @@
+{% extends "livesearch/base.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block search %}
+<form action='{% url web_results %}' method='get'>
+{{ form.key_words }}
+<input type="submit" value="Search" />
+</form>
+{% endblock %}
+{% block navigation %}
+<li><a href="{% url video_results %}?key_words={{q}}">Video</a></li>
+<li><a href="{% url image_results %}?key_words={{q}}">Image</a></li>
+<li class="active"><a href="{% url web_results %}?key_words={{q}}">Web</a></li>
+{% endblock %}
+
+{% block pageheaderinfo %}Web Pages - about {{bingweb.Total}}{%endblock%}
+
+
+{% block mainresult %}
+<dl class="list">
+{% for result in bingweb.Results %}
+<dt><a href="{{ result.Url }}">{{ result.Title }}</a></dt>
+<dd><a href="{{ result.Url }}">{{ result.DisplayUrl }}</a> - {{ result.Description }} -- {{result.DateTime}}</dd>
+{% endfor %}
+</dl>
+{%endblock%}
+
+
+
+{% block paginator %}
+<ul class="pager">
+<li><a href="{% url web_results %}?key_words={{q}}&page={{prev}}">&#171; Prev</a></li>
+{% for search_page in page_range %}
+<li {% ifequal search_page page%} class="active" {% endifequal %}><a href="{% url web_results %}?key_words={{q}}&page={{search_page}}">{{search_page}}</a></li>
+{% endfor %}
+<li><a href="{% url web_results %}?key_words={{q}}&page={{next}}">Next &#187;</a></li>
+</ul>
+</div>
+{%endblock%}
+
+{% block sidebar %}
+<div class="block image-results">
+                    <div class="hd">
+                        <h2>Images - {{ bresults.Total }}</h2>
+                    </div>
+                    <div class="bd">
+                        <h2><a href="{% url image_results %}?key_words={{q}}">See image results >></a> </h2>
+			<ul>
+            {% for result in bresults.Results %}
+				<LI><a href="{{ result.Url|safe }}"><img src="{{ result.Thumbnail.Url|safe }}"></a></LI>
+            {% endfor %}
+			</ul>
+                    </div>
+                </div>
+
+		<div class="block image-results">
+                    <div class="hd">
+                        <h2>Videos - about {{bingVideoResult.Total}}</h2>
+                    </div>
+                    <div class="bd">
+                        <h2><a href="{% url video_results %}?key_words={{q}}">See video results >></a> </h2>
+            <ul>
+            {% for result in bingVideoResult.Results %}
+				<LI><a href="{{ result.PlayUrl|safe }}"><img src="{{ result.StaticThumbnail.Url|safe }}"></a></LI>
+            {% endfor %}
+			</ul>
+                    </div>
+                </div>
+{% endblock %}
