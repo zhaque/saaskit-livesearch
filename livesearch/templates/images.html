@@ -39,32 +39,7 @@
 {%endblock%}
 
 {% block sidebar %}
-<div class="block image-results">
                     <div class="hd">
-                        <h2>Videos - about {{bingVideoResult.Total}}</h2>
+                        <h2>Side bar for other stuff :)</h2>
                     </div>
-                    <div class="bd">
-                        <h2><a href="{% url livesearch_video_results %}?key_words={{q}}">See video results >></a> </h2>
-            <ul>
-            {% for result in bingVideoResult.Results %}
-				<LI><a href="{{ result.PlayUrl|safe }}"><img src="{{ result.StaticThumbnail.Url|safe }}"></a></LI>
-            {% endfor %}
-			</ul>
-                    </div>
-
-                </div>
-
-		<div class="block web_result">
-                                        <div class="hd">
-                                            <h2>Web pages - {{ bingWeb.Total }}</h2>
-                                        </div>
-                                        <div class="bd">
-                                            <h2><a href="{% url livesearch_web_results %}?key_words={{q}}">See web results >></a> </h2>
-                                        <ul>
-                                        {% for result in bingWeb.Results %}
-                                        <li><a href="{{ result.Url }}">{{ result.Title|safe }}</a></li>
-                                        {% endfor %}
-                                        </ul>
-                                        </div>
-                </div>
 {% endblock %}
