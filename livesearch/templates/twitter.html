@@ -1,0 +1,9 @@
+{% extends "livesearch/base.html" %}
+    <h1>Twitter Search results for {{ q }}</h1>
+{% block mainresult %}
+    <ul>
+        {% for result in results %}
+        <li>{{ result.text|safe }}</li>
+        {% endfor %}
+    </ul>
+{% endblock %}
