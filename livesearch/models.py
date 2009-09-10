@@ -69,12 +69,12 @@ class BingNews(pipes.Pipe):
     cache_expiry = 30000000000
 
     @staticmethod
-    def fetch(q):
+    def fetch(q, offset):
         resp = BingNews.objects.get ({
             'AppId': settings.APPID, 'Version': '2.2',
             'Sources': 'News', 'Market': 'en-us',
             #'Options': 'EnableHighlighting',
-            'News.Offset': '0', 'News.SortBy': 'Relevance',
+            'News.Offset': offset, 'News.SortBy': 'Relevance',
             'JsonType': 'callback', 'Query': q,
             })
 

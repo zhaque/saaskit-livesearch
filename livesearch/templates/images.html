@@ -12,6 +12,7 @@
 <li><a href="{% url livesearch_video_results %}?key_words={{q}}">Video</a></li>
 <li class="active"><a href="{% url livesearch_image_results %}?key_words={{q}}">Image</a></li>
 <li><a href="{% url livesearch_web_results %}?key_words={{q}}">Web</a></li>
+<li><a href="{% url livesearch_news_results %}?key_words={{q}}">News</a></li>
 {% endblock %}
 
 {% block pageheaderinfo %}Images - about {{bingImage.Total}}{%endblock%}
