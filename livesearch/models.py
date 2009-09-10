@@ -1,7 +1,6 @@
 from django.db import models
 import django_pipes as pipes
 from django.conf import settings
-from muaccounts.models import MUAccount
 
 
 class GoogleSearch(pipes.Pipe):
@@ -134,23 +133,6 @@ class BingWeb(pipes.Pipe):
     cache_expiry = 30000000000
 
     @staticmethod
-    def fetch(q, offset):
-        bing_options = {
-                        'AppId': settings.APPID,
-                        'Sources':'Web', 'Version': '2.0', 'Market':'en-us',
-                        'Adult': 'Moderate',
-                        'Web.Count': '10', 'Web.Offset': offset,
-                        # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
-                        'JsonType': 'raw', 'Query': q,
-                        }
-        resp = BingNews.objects.get ()
-
-
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Web') and hasattr(resp.SearchResponse.Web, 'Results'):
-            return resp.SearchResponse.Web
-
-
-    @staticmethod
     def fetch_with_options(q, offset, options):
         bing_options = {
                         'AppId': settings.APPID,
@@ -166,6 +148,10 @@ class BingWeb(pipes.Pipe):
 
         if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Web') and hasattr(resp.SearchResponse.Web, 'Results'):
             return resp.SearchResponse.Web
+
+    @staticmethod
+    def fetch(q, offset):
+        return BingWeb.fetch_with_options(q, offset, {})
 
 
 
@@ -272,30 +258,3 @@ class BossPagedata(pipes.Pipe):
 
         if resp and hasattr(resp, 'ysearchresponse'):
             return resp.ysearchresponse
-
-
-class AdminSearchOption(models.Model):
-
-    search_option_choices=(
-                ('DisableLocationDetection', 'DisableLocationDetection'),
-                ('EnableHighlighting', 'EnableHighlighting'),
-                ('All', 'All'),
-                ('None', 'None'),
-            )
-    adult_option_choices=(('Off', 'Off'), ('Moderate', 'Moderate'), ('Strict', 'Strict'), ('None', 'None'))
-    web_search_choices=(
-                        ('DisableHostCollapsing', 'DisableHostCollapsing'),
-                        ('DisableQueryAlterations', 'DisableQueryAlterations'),
-                        ('All', 'All'),
-                        ('None', 'None'),
-                        )
-    video_search_choices=(
-                            ('Date', 'Date'),
-                            ('Relevance', 'Relevance'),
-                            ('None', 'None'),
-                          )
-    search_option = models.CharField(max_length=30, choices=search_option_choices, default='None')
-    adult_option = models.CharField(max_length = 8, choices=adult_option_choices, default='None')
-    web_search = models.CharField(max_length=30, choices=web_search_choices, default = 'None')
-    video_search = models.CharField(max_length=15, choices=video_search_choices, default='None')
-    muaccount = models.OneToOneField(MUAccount, blank=True, null=True)

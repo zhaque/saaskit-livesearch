@@ -1,12 +1,9 @@
 from django.conf.urls.defaults import *
 from django.conf import settings
 
-#from search.views import searches, results, image_results, video_results, search_admin
-
 urlpatterns = patterns('',
-    url(r'^$', 'livesearch.views.searches', name='search_homepage'),
-    url(r'^results$', 'livesearch.views.results', name='web_results'),
-    url(r'^images$', 'livesearch.views.image_results', name='image_results'),
-    url(r'^videos$', 'livesearch.views.video_results', name='video_results'),
-    url(r'^admin$', 'livesearch.views.search_admin', name='search_administartion'),
+    url(r'^$', 'livesearch.views.searches', name='livesearch_search_homepage'),
+    url(r'^results$', 'livesearch.views.results', name='livesearch_web_results'),
+    url(r'^images$', 'livesearch.views.image_results', name='livesearch_image_results'),
+    url(r'^videos$', 'livesearch.views.video_results', name='livesearch_video_results'),
 )
