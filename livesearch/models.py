@@ -14,10 +14,15 @@ class GoogleSearch(pipes.Pipe):
         if resp and hasattr(resp, "responseData") and hasattr(resp.responseData, "results"):
             return resp.responseData.results
 
+class TwitterSearch(pipes.Pipe):
+    uri = "http://search.twitter.com/search.json"
+    cache_expiry = 300000
+    
     @staticmethod
-    def fetch2(q):
-        resp = GoogleSearch.objects.get({'v':1.0, 'q':q}, html=False)
-        return resp
+    def fetch(q):
+        resp = TwitterSearch.objects.get({'q':q})
+        if resp and hasattr(resp, "results"):
+            return resp.results
 
 class BingImage(pipes.Pipe):
     uri = "http://api.bing.net/json.aspx"
