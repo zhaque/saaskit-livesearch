@@ -13,6 +13,7 @@
 <li><a href="{% url livesearch_image_results %}?key_words={{q}}">Image</a></li>
 <li><a href="{% url livesearch_web_results %}?key_words={{q}}">Web</a></li>
 <li class="active"><a href="{% url livesearch_news_results %}?key_words={{q}}">News</a></li>
+<li><a href="{% url livesearch_twitter_results %}?key_words={{q}}">Twitter</a></li>
 {% endblock %}
 
 {% block pageheaderinfo %}News - about {{bingNews.Total}}{%endblock%}

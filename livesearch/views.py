@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.shortcuts import render_to_response
 from forms import SearchesForm
-from models import BingImage, BingWeb, BingVideo, BingNews
+from models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch
 
 
 def searches(request, results='results'):
@@ -251,5 +251,21 @@ def web_results(request):
                                        'next': next,
                                        'page_range': page_range,
                                        'title': 'Bing Search Results',
+                                       })
+    raise Http404
+
+def twitter_results(request):
+    if request.method == 'GET':
+        form = SearchesForm(request.GET)
+        if form.is_valid():
+            key_words = form.get_keywords()
+
+            twitResult = TwitterSearch.fetch(key_words)
+
+            return render_to_response('livesearch/twitter.html',
+                                      {'results': twitResult,
+                                       'q': key_words,
+                                       'form': form,
+                                       'title': 'Twitter Search Results',
                                        })
     raise Http404
