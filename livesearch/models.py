@@ -1,7 +1,7 @@
 from django.db import models
 import django_pipes as pipes
 from django.conf import settings
-
+from django.contrib.auth.models import User
 
 class GoogleSearch(pipes.Pipe):
     uri = "http://ajax.googleapis.com/ajax/services/search/web"
@@ -29,19 +29,21 @@ class BingImage(pipes.Pipe):
     cache_expiry = 3000000000
 
     @staticmethod
-    def fetch(q, count, offset):
-        resp = BingImage.objects.get({'Version':2.0, 'Query':q, 'AppId':settings.APPID,
-                                       'Sources':'Image', 'Market': 'en-us', 'Image.Count': 10,
-                                       'Image.Count':count, 'Image.Offset':offset,
-                                       'JsonType':'callback', 'JsonCallbak':'SearchCompleted',
-
-                                       })
-
+    def fetch_with_options(q, offset, options):
+        bing_options = {'Version':2.0, 'Query':q, 'AppId':settings.APPID,
+                        'Sources':'Image', 'Market': 'en-us',
+                        'Image.Count':'10', 'Image.Offset':offset,
+                        'JsonType':'callback', 'JsonCallbak':'SearchCompleted',}
+        bing_options.update(options)
+        resp = BingImage.objects.get(bing_options)
 
         if resp and hasattr(resp, "SearchResponse") and hasattr(resp.SearchResponse, "Image") and hasattr(resp.SearchResponse.Image, 'Results'):
-
             return resp.SearchResponse.Image
 
+    @staticmethod
+    def fetch(q, count, offset):
+        return BingImage.fetch_with_options(q, offset, {})
+        
     @staticmethod
     def fetch2(q):
         resp = BingSearch.objects.get({'v':1.0, 'q':q, 'AppId':settings.APPID,}, html=False)
@@ -69,17 +71,23 @@ class BingNews(pipes.Pipe):
     cache_expiry = 30000000000
 
     @staticmethod
-    def fetch(q, offset):
-        resp = BingNews.objects.get ({
+    def fetch_with_options(q, offset, options):
+        bing_options = {
             'AppId': settings.APPID, 'Version': '2.2',
             'Sources': 'News', 'Market': 'en-us',
             #'Options': 'EnableHighlighting',
             'News.Offset': offset, 'News.SortBy': 'Relevance',
             'JsonType': 'callback', 'Query': q,
-            })
+        }
+        bing_options.update(options)
+        resp = BingNews.objects.get(bing_options)
 
         if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, "News"):
             return resp.SearchResponse.News
+
+    @staticmethod
+    def fetch(q, offset):
+        return BingNews.fetch_with_options(q, offset, {})
 
 # BingNews searches InstantAnswer
 class BingInstant(pipes.Pipe):
@@ -148,7 +156,7 @@ class BingWeb(pipes.Pipe):
                         'JsonType': 'raw', 'Query': q,
                         }
         bing_options.update(options)
-        resp = BingNews.objects.get(bing_options)
+        resp = BingWeb.objects.get(bing_options)
 
 
         if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Web') and hasattr(resp.SearchResponse.Web, 'Results'):
@@ -174,17 +182,23 @@ class BingVideo(pipes.Pipe):
     cache_expiry = 30000000000
 
     @staticmethod
-    def fetch(q, count, offset):
-        resp = BingNews.objects.get ({
+    def fetch_with_options(q, offset, options):
+        bing_options = {
             'AppId': settings.APPID, 'Version': '2.2',
             'Sources': 'Video', 'Market': 'en-us',
             #'Options': 'EnableHighlighting',
-             'Video.Count': count, 'Video.Offset': offset,
+             'Video.Count': '10', 'Video.Offset': offset,
             'JsonType': 'callback', 'Query': q,
-            })
+                        }
+        bing_options.update(options)
+        resp = BingVideo.objects.get(bing_options)
 
         if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Video'):
             return resp.SearchResponse.Video
+
+    @staticmethod
+    def fetch(q, offset):
+        return BingVideo.fetch_with_options(q, offset, {})
 
 
 def make_map(adict):
@@ -263,3 +277,74 @@ class BossPagedata(pipes.Pipe):
 
         if resp and hasattr(resp, 'ysearchresponse'):
             return resp.ysearchresponse
+
+class AdvancedSearch(models.Model):
+    COUNT_CHOICE = (
+      (10, 10),
+      (20, 20),
+      (50, 50),
+    )
+    MARKETS = (
+      ('ar-XA', 'Arabic - Arabia'),
+      ('bg-BG', 'Bulgarian - Bulgaria'),
+      ('cs-CZ', 'Czech - Czech Republic'),
+      ('da-DK', 'Danish - Denmark'),
+      ('de-AT', 'German - Austria'),
+      ('de-CH', 'German - Switzerland'),
+      ('de-DE', 'German - Germany'),
+      ('el-GR', 'Greek - Greece'),
+      ('en-AU', 'English - Australia'),
+      ('en-CA', 'English - Canada'),
+      ('en-GB', 'English - United Kingdom'),
+      ('en-ID', 'English - Indonesia'),
+      ('en-IE', 'English - Ireland'),
+      ('en-IN', 'English - India'),
+      ('en-MY', 'English - Malaysia'),
+      ('en-NZ', 'English - New Zealand'),
+      ('en-PH', 'English - Philippines'),
+      ('en-SG', 'English - Singapore'),
+      ('en-US', 'English - United States'),
+      ('en-XA', 'English - Arabia'),
+      ('en-ZA', 'English - South Africa'),
+      ('es-AR', 'Spanish - Argentina'),
+      ('es-CL', 'Spanish - Chile'),
+      ('es-ES', 'Spanish - Spain'),
+      ('es-MX', 'Spanish - Mexico'),
+      ('es-US', 'Spanish - United States'),
+      ('es-XL', 'Spanish - Latin America'),
+      ('et-EE', 'Estonian - Estonia'),
+      ('fi-FI', 'Finnish - Finland'),
+      ('fr-BE', 'French - Belgium'),
+      ('fr-CA', 'French - Canada'),
+      ('fr-CH', 'French - Switzerland'),
+      ('fr-FR', 'French - France'),
+      ('he-IL', 'Hebrew - Israel'),
+      ('hr-HR', 'Croatian - Croatia'),
+      ('hu-HU', 'Hungarian - Hungary'),
+      ('it-IT', 'Italian - Italy'),
+      ('ja-JP', 'Japanese - Japan'),
+      ('ko-KR', 'Korean - Korea'),
+      ('lt-LT', 'Lithuanian - Lithuania'),
+      ('lv-LV', 'Latvian - Latvia'),
+      ('nb-NO', 'Norwegian - Norway'),
+      ('nl-BE', 'Dutch - Belgium'),
+      ('nl-NL', 'Dutch - Netherlands'),
+      ('pl-PL', 'Polish - Poland'),
+      ('pt-BR', 'Portuguese - Brazil'),
+      ('pt-PT', 'Portuguese - Portugal'),
+      ('ro-RO', 'Romanian - Romania'),
+      ('ru-RU', 'Russian - Russia'),
+      ('sk-SK', 'Slovak - Slovak Republic'),
+      ('sl-SL', 'Slovenian - Slovenia'),
+      ('sv-SE', 'Swedish - Sweden'),
+      ('th-TH', 'Thai - Thailand'),
+      ('tr-TR', 'Turkish - Turkey'),
+      ('uk-UA', 'Ukrainian - Ukraine'),
+      ('zh-CN', 'Chinese - China'),
+      ('zh-HK', 'Chinese - Hong Kong SAR'),
+      ('zh-TW', 'Chinese - Taiwan'),
+    )
+    
+    count = models.PositiveSmallIntegerField(choices = COUNT_CHOICE)
+    market = models.CharField(max_length=5, choices = MARKETS)
+    user = models.ForeignKey(User)

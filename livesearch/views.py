@@ -1,7 +1,7 @@
 from django.http import Http404
 from django.shortcuts import render_to_response
 from forms import SearchesForm
-from models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch
+from models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch
 
 
 def searches(request, results='results'):
@@ -24,9 +24,22 @@ def results(request):
                 page = '1'
             page = int(page)
 
-            bingWebResult = BingWeb.fetch(key_words, str((page-1)*10 + 1))
-            bingResult = BingImage.fetch(key_words, 6, 0)
-            bingVideoResult = BingVideo.fetch(key_words, '6', '0')
+            #get search options
+            weboptions = {}
+            videooptions = {}
+            imageoptions = {}
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(user = request.user)
+                weboptions = {'Web.Count': advSearch.count, 'Market': advSearch.market,}  
+                videooptions = {'Video.Count': advSearch.count, 'Market': advSearch.market,}
+                imageoptions = {'Image.Count': advSearch.count, 'Market': advSearch.market,}
+              except:
+                raise
+            
+            bingWebResult = BingWeb.fetch_with_options(key_words, str((page-1)*10 + 1), weboptions)
+            bingResult = BingImage.fetch_with_options(key_words, 0, imageoptions)
+            bingVideoResult = BingVideo.fetch_with_options(key_words, '0', videooptions)
 
             if page*10> int(bingWebResult.Total):
                 page = 1
@@ -74,11 +87,17 @@ def image_results(request):
                 page = '1'
             page = int(page)
 
-            bingWebResult = BingWeb.fetch(key_words, 0)
-            bingImageResult = BingImage.fetch(key_words, 48, str((page-1)*10))
-            bingVideoResult = BingVideo.fetch(key_words, '6', '0')
+            imageoptions = {}
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(user = request.user)
+                imageoptions = {'Image.Count': advSearch.count, 'Market': advSearch.market,}
+              except:
+                raise
+            
+            bingImageResult = BingImage.fetch_with_options(key_words, str((page-1)*10), imageoptions)
 
-            if page*48> int(bingWebResult.Total):
+            if page*48> int(bingImageResult.Total):
                 page = 1
 
             if page<=10:
@@ -86,10 +105,10 @@ def image_results(request):
                 page_end = 13
             else:
                 page_start = page - 10
-                if (page + 10) * 48 <= int(bingWebResult.Total):
+                if (page + 10) * 48 <= int(bingImageResult.Total):
                     page_end = page + 10
                 else:
-                    page_end = int(bingWebResult.Total)/48 + 1
+                    page_end = int(bingImageResult.Total)/48 + 1
 
             prev = page - 1 or page
             next = page + 1
@@ -97,9 +116,8 @@ def image_results(request):
             #caculate the paginator  --- end
 
             return render_to_response('livesearch/images.html',
-                                      {'bingWeb': bingWebResult,
+                                      {
                                        'bingImage': bingImageResult,
-                                       'bingVideoResult': bingVideoResult,
                                        'q': key_words,
                                        'form': form,
                                        'page': page,
@@ -126,11 +144,17 @@ def video_results(request):
                 page = '1'
             page = int(page)
 
-            bingWebResult = BingWeb.fetch(key_words, 0)
-            bingImageResult = BingImage.fetch(key_words, 6, 0)
-            bingVideoResult = BingVideo.fetch(key_words, 48, str((page-1)*10))
+            videooptions = {}
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(user = request.user)
+                videooptions = {'Video.Count': advSearch.count, 'Market': advSearch.market,}
+              except:
+                raise
+            
+            bingVideoResult = BingVideo.fetch_with_options(key_words, str((page-1)*10), videooptions)
 
-            if page*48> int(bingWebResult.Total):
+            if page*48> int(bingVideoResult.Total):
                 page = 1
 
             if page<=10:
@@ -138,10 +162,10 @@ def video_results(request):
                 page_end = 13
             else:
                 page_start = page - 10
-                if (page + 10) * 48 <= int(bingWebResult.Total):
+                if (page + 10) * 48 <= int(bingVideoResult.Total):
                     page_end = page + 10
                 else:
-                    page_end = int(bingWebResult.Total)/48 + 1
+                    page_end = int(bingVideoResult.Total)/48 + 1
 
             prev = page - 1 or page
             next = page + 1
@@ -149,8 +173,7 @@ def video_results(request):
             #caculate the paginator  --- end
 
             return render_to_response('livesearch/videos.html',
-                                      {'bingWeb': bingWebResult,
-                                       'bingImage': bingImageResult,
+                                      {
                                        'bingVideoResult': bingVideoResult,
                                        'q': key_words,
                                        'form': form,
@@ -176,7 +199,15 @@ def news_results(request):
                 page = '1'
             page = int(page)
 
-            bingNewsResult = BingNews.fetch(key_words, str((page-1)*10 + 1))
+            newsoptions = {}
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(user = request.user)
+                newsoptions = {'Market': advSearch.market,}
+              except:
+                raise
+            
+            bingNewsResult = BingNews.fetch_with_options(key_words, str((page-1)*10 + 1), newsoptions)
 
             if page*10> int(bingNewsResult.Total):
                 page = 1
@@ -222,7 +253,15 @@ def web_results(request):
                 page = '1'
             page = int(page)
 
-            bingWebResult = BingWeb.fetch(key_words, str((page-1)*10 + 1))
+            weboptions = {}
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(user = request.user)
+                weboptions = {'Web.Count': advSearch.count, 'Market': advSearch.market,}  
+              except:
+                raise
+            
+            bingWebResult = BingWeb.fetch_with_options(key_words, str((page-1)*10 + 1), weboptions)
 
             if page*10> int(bingWebResult.Total):
                 page = 1
