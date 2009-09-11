@@ -1,23 +1,6 @@
-{% extends "livesearch/base.html" %}
-
-{% block title %}{{title}}{% endblock %}
-
-{% block search %}
-<form action='{% url livesearch_twitter_results %}' method='get'>
-{{ form.key_words }}
-<input type="submit" value="Search" />
-</form>
-{% endblock %}
-{% block navigation %}
-<li><a href="{% url livesearch_video_results %}?key_words={{q}}">Video</a></li>
-<li><a href="{% url livesearch_image_results %}?key_words={{q}}">Image</a></li>
-<li><a href="{% url livesearch_web_results %}?key_words={{q}}">Web</a></li>
-<li><a href="{% url livesearch_news_results %}?key_words={{q}}">News</a></li>
-<li class="active"><a href="{% url livesearch_twitter_results %}?key_words={{q}}">Twitter</a></li>
-{% endblock %}
+{% extends "livesearch/search_results.html" %}
 
 {% block pageheaderinfo %}Twitter Search results for "{{ q }}"{%endblock%}
-
 
 {% block mainresult %}
     <ul>
@@ -27,11 +10,4 @@
     </ul>
 {% endblock %}
 
-{% block paginator %}
-{%endblock%}
-
-{% block sidebar %}
-                    <div class="hd">
-                        <h2>Side bar for other stuff :)</h2>
-                    </div>
-{% endblock %}
+{% block paginator %}{%endblock%}

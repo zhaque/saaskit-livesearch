@@ -1,0 +1,37 @@
+{% extends "livesearch/base.html" %}
+
+{% block title %}{{title}}{% endblock %}
+
+{% block search %}
+<form action='{% url livesearch_results api.slug %}' method='get'>
+{{ form.key_words }}
+<input type="submit" value="Search" />
+</form>
+{% endblock %}
+
+{% block navigation %}
+    {% for sapi in available_apis %}
+<li{% ifequal sapi.slug api.slug %} class="active"{% endifequal %}><a href="{% url livesearch_results sapi.slug %}?key_words={{q}}">{{ sapi.name }}</a></li>
+    {% endfor %}
+{% endblock %}
+
+{% block pageheaderinfo %}{%endblock%}
+
+{% block mainresult %}{%endblock%}
+
+{% block paginator %}
+<ul class="pager">
+<li><a href="{% url livesearch_results api.slug %}?key_words={{q}}&page={{prev}}">&#171; Prev</a></li>
+{% for search_page in page_range %}
+<li {% ifequal search_page page%} class="active" {% endifequal %}><a href="{% url livesearch_results api.slug %}?key_words={{q}}&page={{search_page}}">{{search_page}}</a></li>
+{% endfor %}
+<li><a href="{% url livesearch_results api.slug %}?key_words={{q}}&page={{next}}">Next &#187;</a></li>
+</ul>
+</div>
+{%endblock%}
+
+{% block sidebar %}
+                    <div class="hd">
+                        <h2>Side bar for other stuff :)</h2>
+                    </div>
+{% endblock %}

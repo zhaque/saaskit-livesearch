@@ -1,15 +1,22 @@
 from django.http import Http404
 from django.shortcuts import render_to_response
-from forms import SearchesForm
-from models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch
+from livesearch.forms import SearchesForm
+from livesearch.models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch, SearchApi
 
 
 def searches(request, results='results'):
+    search_apis = SearchApi.objects.all()
+    for api in search_apis:
+      if api.search_model != 'BingWeb':
+          continue
+      webapi = api
     form = SearchesForm()
     return render_to_response('livesearch/searches.html', {'form': form,
                                                     'result': 'results',
+                                                    'api': webapi,
                                                     'title': 'Search by Google and Bing ', })
 
+# deprecatied 
 def results(request):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
@@ -73,7 +80,7 @@ def results(request):
                                        })
 
 
-def image_results(request):
+def image_results(request, context_vars):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
         if form.is_valid():
@@ -115,8 +122,7 @@ def image_results(request):
             page_range = range(page_start, page_end)
             #caculate the paginator  --- end
 
-            return render_to_response('livesearch/images.html',
-                                      {
+            context_vars.update({
                                        'bingImage': bingImageResult,
                                        'q': key_words,
                                        'form': form,
@@ -126,11 +132,12 @@ def image_results(request):
                                        'page_range': page_range,
                                        'title': 'Bing Image Search Results',
                                        })
+            return render_to_response('livesearch/images.html', context_vars)
     raise Http404
 
 
 
-def video_results(request):
+def video_results(request, context_vars):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
         if form.is_valid():
@@ -172,8 +179,7 @@ def video_results(request):
             page_range = range(page_start, page_end)
             #caculate the paginator  --- end
 
-            return render_to_response('livesearch/videos.html',
-                                      {
+            context_vars.update({
                                        'bingVideoResult': bingVideoResult,
                                        'q': key_words,
                                        'form': form,
@@ -183,9 +189,10 @@ def video_results(request):
                                        'page_range': page_range,
                                        'title': 'Bing Video Search Results',
                                        })
+            return render_to_response('livesearch/videos.html', context_vars)
     raise Http404
 
-def news_results(request):
+def news_results(request, context_vars):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
         if form.is_valid():
@@ -227,8 +234,7 @@ def news_results(request):
             page_range = range(page_start, page_end)
             #caculate the paginator  --- end
 
-            return render_to_response('livesearch/news.html',
-                                      {'bingNews': bingNewsResult,
+            context_vars.update({'bingNews': bingNewsResult,
                                        'q': key_words,
                                        'form': form,
                                        'page': page,
@@ -237,9 +243,10 @@ def news_results(request):
                                        'page_range': page_range,
                                        'title': 'Bing News Search Results',
                                        })
+            return render_to_response('livesearch/news.html', context_vars)
     raise Http404
     
-def web_results(request):
+def web_results(request, context_vars):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
         if form.is_valid():
@@ -281,8 +288,7 @@ def web_results(request):
             page_range = range(page_start, page_end)
             #caculate the paginator  --- end
 
-            return render_to_response('livesearch/web.html',
-                                      {'bingweb': bingWebResult,
+            context_vars.update({'bingweb': bingWebResult,
                                        'q': key_words,
                                        'form': form,
                                        'page': page,
@@ -291,9 +297,10 @@ def web_results(request):
                                        'page_range': page_range,
                                        'title': 'Bing Search Results',
                                        })
+            return render_to_response('livesearch/web.html', context_vars)
     raise Http404
 
-def twitter_results(request):
+def twitter_results(request, context_vars):
     if request.method == 'GET':
         form = SearchesForm(request.GET)
         if form.is_valid():
@@ -301,10 +308,36 @@ def twitter_results(request):
 
             twitResult = TwitterSearch.fetch(key_words)
 
-            return render_to_response('livesearch/twitter.html',
-                                      {'results': twitResult,
+            context_vars.update({'results': twitResult,
                                        'q': key_words,
                                        'form': form,
                                        'title': 'Twitter Search Results',
                                        })
+            return render_to_response('livesearch/twitter.html', context_vars)
     raise Http404
+
+def search(request, slug):
+    if request.muaccount:
+        api = SearchApi.objects.get(slug=slug)
+        available_apis = SearchApi.objects.filter(muaccount = request.muaccount)
+        context_vars = {'api':api, 'available_apis':available_apis}
+        if api in available_apis:
+            return search_results(request, context_vars)
+        else:
+            raise Http404
+            #TODO show api unavailable page
+          
+def search_results(request, context_vars):
+    searchModel = globals()[context_vars['api'].search_model]()
+
+    if isinstance(searchModel, BingNews):
+        return news_results(request, context_vars)
+    elif isinstance(searchModel, BingImage):
+        return image_results(request, context_vars)
+    elif isinstance(searchModel, BingVideo):
+        return video_results(request, context_vars)
+    elif isinstance(searchModel, BingWeb):
+        return web_results(request, context_vars)
+    elif isinstance(searchModel, TwitterSearch):
+        return twitter_results(request, context_vars)
+#    raise Http404

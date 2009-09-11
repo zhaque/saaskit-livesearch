@@ -2,6 +2,7 @@ from django.db import models
 import django_pipes as pipes
 from django.conf import settings
 from django.contrib.auth.models import User
+from muaccounts.models import MUAccount
 
 class GoogleSearch(pipes.Pipe):
     uri = "http://ajax.googleapis.com/ajax/services/search/web"
@@ -348,3 +349,20 @@ class AdvancedSearch(models.Model):
     count = models.PositiveSmallIntegerField(choices = COUNT_CHOICE)
     market = models.CharField(max_length=5, choices = MARKETS)
     user = models.ForeignKey(User)
+
+class SearchApi(models.Model):
+    SEARCH_MODELS = (
+        ('BingNews','Bing News'),
+        ('BingWeb','Bing Web'),
+        ('BingImage','Bing Image'),
+        ('BingVideo','Bing Video'),
+        ('TwitterSearch','Twitter Search'),
+        ('GoogleSearch','Google Search'),
+    )
+    name = models.CharField(max_length=255)
+    slug = models.SlugField(unique=True)
+    muaccount = models.ManyToManyField(MUAccount, blank=True, null=True)
+    search_model = models.CharField(max_length=255, choices = SEARCH_MODELS)
+
+    def __unicode__(self):
+        return self.name    
