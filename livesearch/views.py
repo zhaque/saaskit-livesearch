@@ -340,4 +340,4 @@ def search_results(request, context_vars):
         return web_results(request, context_vars)
     elif isinstance(searchModel, TwitterSearch):
         return twitter_results(request, context_vars)
-#    raise Http404
+    raise Http404
