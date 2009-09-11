@@ -361,7 +361,7 @@ class SearchApi(models.Model):
     )
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)
-    muaccount = models.ManyToManyField(MUAccount, blank=True, null=True)
+    muaccount = models.ManyToManyField(MUAccount, blank=True, null=True, related_name='searchapis')
     search_model = models.CharField(max_length=255, choices = SEARCH_MODELS)
 
     def __unicode__(self):
