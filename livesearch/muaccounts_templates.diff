@@ -1,0 +1,22 @@
+diff --git a/templates/muaccounts/account_detail.html b/templates/muaccounts/account_detail.html
+index d8245e3..e907bb8 100755
+--- a/templates/muaccounts/account_detail.html
++++ b/templates/muaccounts/account_detail.html
+@@ -64,6 +64,17 @@
+     <a href="{% url sso %}?next={% setting MUACCOUNTS_DEFAULT_URL %}sub/">Upgrade your plan</a>
+     to get access to more features!.
+   </div></div>
++
++  <div class="block">
++  <div class="hd"><h2>Your search engines</h2></div><div class="bd">
++    Enable/Disable search groups:
++    <form action="" method="POST">
++    {% for api in search_apis %}
++      <div><input type="checkbox" value="{{ api.id }}" name="api_list" {% if object in api.muaccount.all %}checked="checked"{% endif %}/>{{ api.name }}</div>
++    {% endfor %}
++       <input type="submit" value="Save">
++     </form>
++  </div></div>
+ {% endblock %}
+ 
+ 
