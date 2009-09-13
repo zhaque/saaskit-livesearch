@@ -4,203 +4,271 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from muaccounts.models import MUAccount
 
-class GoogleSearch(pipes.Pipe):
+class BaseSearch(pipes.Pipe):
+    uri = ''
+    cache_expiry = 3000000000
+    options = {}
+
+    def set_query(self, query):
+        pass
+
+    def set_count(self, count):
+        pass
+
+    def set_offset(self, offset):
+        pass
+
+    def set_market(self, market):
+        pass
+
+    def set_version(self, version):
+        pass
+
+    def set_adult(self, adult):
+        pass
+
+    def get_result(self, response):
+        pass
+
+    def fetch(self, query, count=None, offset=None, market=None, version=None, adult=None):
+        self.set_query(query)
+        if count:
+            self.set_count(count)
+        if offset:
+            self.set_offset(offset)
+        if market:
+            self.set_market(market)
+        if version:
+            self.set_version(version)
+        if adult:
+            self.set_adult(adult)
+
+        response = self.fetch_with_options(self.options)
+        return self.get_result(response)
+
+    def fetch_with_options(self, options):
+        print options
+        resp = self.objects.get(options)
+        if resp:
+            return resp
+        return None
+
+class GoogleSearch(BaseSearch):
     uri = "http://ajax.googleapis.com/ajax/services/search/web"
     cache_expiry = 3000000000
+    options = {
+        'v':1.0
+    }
+    
+    def set_query(self, query):
+        self.options.update({'q':query})
 
-    @staticmethod
-    def fetch(q):
-        resp = GoogleSearch.objects.get({'v':1.0, 'q':q})
+    def get_result(self, response):
+        res = dict()
+        if response and hasattr(response, "responseData") and hasattr(response.responseData, "results"):
+            res.update({'google':response.responseData.results,})
+        return res
 
-        if resp and hasattr(resp, "responseData") and hasattr(resp.responseData, "results"):
-            return resp.responseData.results
-
-class TwitterSearch(pipes.Pipe):
+class TwitterSearch(BaseSearch):
     uri = "http://search.twitter.com/search.json"
     cache_expiry = 300000
-    
-    @staticmethod
-    def fetch(q):
-        resp = TwitterSearch.objects.get({'q':q})
-        if resp and hasattr(resp, "results"):
-            return resp.results
 
-class BingImage(pipes.Pipe):
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 3000000000
+    def set_query(self, query):
+        self.options.update({'q':query})
 
-    @staticmethod
-    def fetch_with_options(q, offset, options):
-        bing_options = {'Version':2.0, 'Query':q, 'AppId':settings.APPID,
-                        'Sources':'Image', 'Market': 'en-us',
-                        'Image.Count':'10', 'Image.Offset':offset,
-                        'JsonType':'callback', 'JsonCallbak':'SearchCompleted',}
-        bing_options.update(options)
-        resp = BingImage.objects.get(bing_options)
-
-        if resp and hasattr(resp, "SearchResponse") and hasattr(resp.SearchResponse, "Image") and hasattr(resp.SearchResponse.Image, 'Results'):
-            return resp.SearchResponse.Image
-
-    @staticmethod
-    def fetch(q, count, offset):
-        return BingImage.fetch_with_options(q, offset, {})
-        
-    @staticmethod
-    def fetch2(q):
-        resp = BingSearch.objects.get({'v':1.0, 'q':q, 'AppId':settings.APPID,}, html=False)
-        return resp
+    def get_result(self, response):
+        res = dict()
+        if response and hasattr(response, "results"):
+            res.update({'twitter':response.results,})
+        return res
 
 # BingMultiple searches spell + web
-class BingMultiple(pipes.Pipe):
+class BingMultiple(BaseSearch):
     uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 3000000000
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+    }
 
-    @staticmethod
-    def fetch(q):
-        resp = BingMultiple.objects.get({
-            'AppId':settings.APPID, 'Version':'2.2',
-            'Market':'en-US', 'Query':q,
-            'JsonType': 'raw',
-            'web.count': '4',})
+    def set_query(self, query):
+        self.options.update({'Query':query})
 
-        if resp and hasattr(resp, "SearchResponse"):
-            return resp.SearchResponse
+    def set_market(self, market):
+        self.options.update({'Market':market})
 
-# BingNews searches news
-class BingNews(pipes.Pipe):
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 30000000000
+    def set_version(self, version):
+        self.options.update({'Version':version})
 
-    @staticmethod
-    def fetch_with_options(q, offset, options):
-        bing_options = {
-            'AppId': settings.APPID, 'Version': '2.2',
-            'Sources': 'News', 'Market': 'en-us',
-            #'Options': 'EnableHighlighting',
-            'News.Offset': offset, 'News.SortBy': 'Relevance',
-            'JsonType': 'callback', 'Query': q,
-        }
-        bing_options.update(options)
-        resp = BingNews.objects.get(bing_options)
+    def get_result(self, response):
+        if response and hasattr(response, "SearchResponse"):
+            response = response.SearchResponse
+        else:
+            return None
 
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, "News"):
-            return resp.SearchResponse.News
-
-    @staticmethod
-    def fetch(q, offset):
-        return BingNews.fetch_with_options(q, offset, {})
+        res = dict()
+        if hasattr(response, "Web") and hasattr(response.Web, 'Results'):
+            res.update({'web':response.Web,})
+        if hasattr(response, "News") and hasattr(response.News, 'Results'):
+            res.update({'news':response.News,})
+        if hasattr(response, "Image") and hasattr(response.Image, 'Results'):
+            res.update({'images':response.Image,})
+        if hasattr(response, "Video") and hasattr(response.Video, 'Results'):
+            res.update({'video':response.Video,})
+        if hasattr(response, 'RelatedSearch') and hasattr(response.RelatedSearch, 'Results'):
+            res.update({'related': response.RelatedSearch.Results})
+        if hasattr(response, 'InstantAnswer') and hasattr(response.InstantAnswer, 'Results'):
+            res.update({'related': response.InstantAnswer.Results})
+        if hasattr(response, "Spell") and hasattr(response.Spell, 'Results'):
+            res.update({'spell': response.Spell})
+        if hasattr(response, 'Errors'):
+            res.update({'errors': response.Errors})
+        return res
 
 # BingNews searches InstantAnswer
-class BingInstant(pipes.Pipe):
+class BingInstant(BingMultiple):
     """
     resp.InstantAnswer.Results[0].keys()
 [u'Url', u'ClickThroughUrl', u'ContentType', u'InstantAnswerSpecificData', u'Title']
     """
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources': 'InstantAnswer',
+    }
 
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 30000000000
-
-    @staticmethod
-    def fetch(q):
-        resp = BingInstant.objects.get ({
-            'AppId': settings.APPID, 'Version': '2.2',
-            'Sources': 'News', 'Market': 'en-us',
-            #'Options': 'EnableHighlighting',
-            'Sources': 'InstantAnswer',
-            'JsonType': 'callback', 'Query': q,
-            })
-
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'InstantAnswer') and hasattr(resp.SearchResponse.InstantAnswer, 'Results'):
-            return resp.SearchResponse.InstantAnswer.Results
-
-# BingNews searches news
-class BingRelated(pipes.Pipe):
+class BingRelated(BingMultiple):
     """
     resp.RelatedSearch.Results[3].keys()
 [u'Url', u'Title']
     """
-
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 30000000000
-
-    @staticmethod
-    def fetch(q):
-        resp = BingNews.objects.get ({
-            'AppId': settings.APPID, 'Version': '2.2',
-            'Market': 'en-us',
-            #'Options': 'EnableHighlighting',
-            'Sources': 'RelatedSearch',
-            'JsonType': 'callback', 'Query': q,
-            })
-
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'RelatedSearch') and hasattr(resp.SearchResponse.RelatedSearch, 'Results'):
-            return resp.SearchResponse.RelatedSearch.Results
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources': 'RelatedSearch',
+    }
 
 # BingNews searches news
-class BingWeb(pipes.Pipe):
+class BingNews(BingMultiple):
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources': 'News',
+      'News.Count': '15',
+      'News.Offset': '0',
+      'News.SortBy': 'Relevance',
+    }
+
+    def set_offset(self, offset):
+        self.options.update({'News.Offset':offset})
+
+class BingNewsRelated(BingNews):
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources': 'News RelatedSearch',
+      'News.Count': '15',
+      'News.Offset': '0',
+      'News.SortBy': 'Relevance',
+    }
+
+class BingNewsRelatedSpell(BingNews):
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources': 'News RelatedSearch Spell',
+      'News.Count': '15',
+      'News.Offset': '0',
+      'News.SortBy': 'Relevance',
+    }
+
+class BingWeb(BingMultiple):
     """
     resp.Web.Results[0].keys()
 [u'Url', u'Title', u'DisplayUrl', u'Description', u'DateTime']
 
     """
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 30000000000
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources':'Web',
+      'Adult': 'Moderate',
+      'Web.Count': '10', 'Web.Offset': '0',
+      # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
+    }
 
-    @staticmethod
-    def fetch_with_options(q, offset, options):
-        bing_options = {
-                        'AppId': settings.APPID,
-                        'Sources':'Web', 'Version': '2.0', 'Market':'en-us',
-                        'Adult': 'Moderate',
-                        'Web.Count': '10', 'Web.Offset': offset,
-                        # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
-                        'JsonType': 'raw', 'Query': q,
-                        }
-        bing_options.update(options)
-        resp = BingWeb.objects.get(bing_options)
+#    def __init__(self):
+#        self.options.update({
+#            'Sources':'Web',
+#            'Adult': 'Moderate',
+#            'Web.Count': '10', 'Web.Offset': '0',
+#            # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
+#        })
 
+    def set_count(self, count):
+        self.options.update({'Web.Count':count})
 
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Web') and hasattr(resp.SearchResponse.Web, 'Results'):
-            return resp.SearchResponse.Web
+    def set_offset(self, offset):
+        self.options.update({'Web.Offset':offset})
 
-    @staticmethod
-    def fetch(q, offset):
-        return BingWeb.fetch_with_options(q, offset, {})
+    def set_adult(self, adult):
+        self.options.update({'Adult':adult})
 
+class BingImage(BingWeb):
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources':'Image',
+      'Adult': 'Moderate',
+      'Image.Count': '10',
+      'Image.Offset': '0',
+    }
 
+    def set_count(self, count):
+        self.options.update({'Image.Count':count})
 
-# BingNews searches news
-class BingVideo(pipes.Pipe):
+    def set_offset(self, offset):
+        self.options.update({'Image.Offset':offset})
+
+class BingVideo(BingWeb):
     """
     resp2.Video.keys()
 [u'Total', u'Results', u'Offset']
     resp2.Video.Results[0].keys()
 [u'Title', u'SourceTitle', u'StaticThumbnail', u'ClickThroughPageUrl', u'RunTime', u'PlayUrl']
-
-
     """
-    uri = "http://api.bing.net/json.aspx"
-    cache_expiry = 30000000000
 
-    @staticmethod
-    def fetch_with_options(q, offset, options):
-        bing_options = {
-            'AppId': settings.APPID, 'Version': '2.2',
-            'Sources': 'Video', 'Market': 'en-us',
-            #'Options': 'EnableHighlighting',
-             'Video.Count': '10', 'Video.Offset': offset,
-            'JsonType': 'callback', 'Query': q,
-                        }
-        bing_options.update(options)
-        resp = BingVideo.objects.get(bing_options)
+    options = {
+      'AppId':settings.APPID,
+      'Version':'2.2',
+      'Market':'en-US',
+      'JsonType': 'raw',
+      'Sources':'Video',
+      'Adult': 'Moderate',
+      'Video.Count': '10',
+      'Video.Offset': '0',
+    }
 
-        if resp and hasattr(resp, 'SearchResponse') and hasattr(resp.SearchResponse, 'Video'):
-            return resp.SearchResponse.Video
+    def set_count(self, count):
+        self.options.update({'Video.Count':count})
 
-    @staticmethod
-    def fetch(q, offset):
-        return BingVideo.fetch_with_options(q, offset, {})
-
+    def set_offset(self, offset):
+        self.options.update({'Video.Offset':offset})
 
 def make_map(adict):
     """
@@ -358,6 +426,7 @@ class SearchApi(models.Model):
         ('BingVideo','Bing Video'),
         ('TwitterSearch','Twitter Search'),
         ('GoogleSearch','Google Search'),
+        ('BingNewsRelatedSpell', 'Bing News+Related+Spell'),
     )
     name = models.CharField(max_length=255)
     slug = models.SlugField(unique=True)

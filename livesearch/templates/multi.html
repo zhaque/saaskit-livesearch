@@ -1,0 +1,90 @@
+{% extends "livesearch/search_results.html" %}
+
+{% block pageheaderinfo %}{{ title }}{%endblock%}
+
+{% block mainresult %}
+
+{% if results.errors %}
+<h1>Errors</h1>
+<dl>
+{% for result in results.errors %}
+<dt><a href="{{ result.HelpUrl }}">{{ result.Code }}:&nbsp;{{ result.Message }}</a></dt>
+<dd>{{ result.Parameter }} - {{ result.Value }}</dd>
+{% endfor %}
+{% endif %}
+
+{% if results.spell %}
+<h1>Spell ({{ results.spell.Total }})</h1>
+<dl>
+{% for result in results.spell.Results %}
+<dt>{{ result.Value }}</dt>
+{% endfor %}
+{% endif %}
+
+{% if results.related %}
+<h1>Related</h1>
+<dl>
+{% for result in results.related %}
+<dt><a href="{{ result.Url }}">{{ result.Title }}</a></dt>
+{% endfor %}
+</dl>
+{% endif %}
+
+{% if results.news %}
+<h1>News ({{ results.news.Total }})</h1>
+<dl>
+{% for result in results.news.Results %}
+<dt><a href="{{ result.Url }}">{{ result.Title }}</a></dt>
+<dd>{{ result.Source }} - {{ result.Snippet }} -- {{result.Date}}</dd>
+{% endfor %}
+</dl>
+{% endif %}
+
+{% if results.web %}
+<h1>Web ({{ results.web.Total }})</h1>
+<dl>
+{% for result in results.web.Results %}
+<dt><a href="{{ result.Url }}">{{ result.Title }}</a></dt>
+<dd><a href="{{ result.Url }}">{{ result.DisplayUrl }}</a> - {{ result.Description }} -- {{result.DateTime}}</dd>
+{% endfor %}
+</dl>
+{% endif %}
+
+{% if results.images %}
+<h1>Images ({{ results.images.Total }})</h1>
+<ul>
+{% for result in results.images.Results %}
+<li><a href="{{ result.Url|safe }}"><img src="{{ result.Thumbnail.Url|safe }}"></a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if results.video %}
+<h1>Video ({{ results.video.Total }})</h1>
+<ul>
+{% for result in results.video.Results %}
+<li><a href="{{ result.PlayUrl|safe }}"><img src="{{ result.StaticThumbnail.Url|safe }}"></a></li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if results.twitter %}
+<h1>Twitter</h1>
+<ul>
+{% for result in results.twitter %}
+<li>{{ result.text|safe }}</li>
+{% endfor %}
+</ul>
+{% endif %}
+
+{% if results.google %}
+<h1>Google</h1>
+<dl>
+{% for result in results.google %}
+<dt><a href="{{ result.url }}">{{ result.title|safe }}</a></dt>
+<dd>{{ result.content|safe }}</a> - <a href="{{ result.cacheUrl }}">cached</a></dd>
+{% endfor %}
+</dl>
+{% endif %}
+
+{%endblock%}
