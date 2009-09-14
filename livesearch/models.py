@@ -7,24 +7,26 @@ from muaccounts.models import MUAccount
 class BaseSearch(pipes.Pipe):
     uri = ''
     cache_expiry = 3000000000
-    options = {}
+
+    def init_options(self):
+        self.options = dict()
 
     def set_query(self, query):
         pass
 
-    def set_count(self, count):
+    def set_count(self, count=10):
         pass
 
-    def set_offset(self, offset):
+    def set_offset(self, offset=0):
         pass
 
-    def set_market(self, market):
+    def set_market(self, market=''):
         pass
 
-    def set_version(self, version):
+    def set_version(self, version=''):
         pass
 
-    def set_adult(self, adult):
+    def set_adult(self, adult=''):
         pass
 
     def get_result(self, response):
@@ -56,9 +58,10 @@ class BaseSearch(pipes.Pipe):
 class GoogleSearch(BaseSearch):
     uri = "http://ajax.googleapis.com/ajax/services/search/web"
     cache_expiry = 3000000000
-    options = {
-        'v':1.0
-    }
+
+    def init_options(self):
+        super(GoogleSearch, self).init_options()
+        self.options.update({'v':1.0})
     
     def set_query(self, query):
         self.options.update({'q':query})
@@ -82,23 +85,28 @@ class TwitterSearch(BaseSearch):
             res.update({'twitter':response.results,})
         return res
 
-# BingMultiple searches spell + web
 class BingMultiple(BaseSearch):
     uri = "http://api.bing.net/json.aspx"
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-    }
+
+    def init_options(self):
+        super(BingMultiple, self).init_options()
+        self.options.update({
+            'AppId':settings.APPID,
+            'JsonType': 'raw',
+        })
+        self.set_count()
+        self.set_offset()
+        self.set_market()
+        self.set_version()
+        self.set_adult()
 
     def set_query(self, query):
         self.options.update({'Query':query})
 
-    def set_market(self, market):
+    def set_market(self, market='en-US'):
         self.options.update({'Market':market})
 
-    def set_version(self, version):
+    def set_version(self, version='2.2'):
         self.options.update({'Version':version})
 
     def get_result(self, response):
@@ -132,66 +140,55 @@ class BingInstant(BingMultiple):
     resp.InstantAnswer.Results[0].keys()
 [u'Url', u'ClickThroughUrl', u'ContentType', u'InstantAnswerSpecificData', u'Title']
     """
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources': 'InstantAnswer',
-    }
+
+    def init_options(self):
+        super(BingInstant, self).init_options()
+        self.options.update({'Sources': 'InstantAnswer',})
 
 class BingRelated(BingMultiple):
     """
     resp.RelatedSearch.Results[3].keys()
 [u'Url', u'Title']
     """
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources': 'RelatedSearch',
-    }
+
+    def init_options(self):
+        super(BingRelated, self).init_options()
+        self.options.update({'Sources': 'RelatedSearch',})
 
 # BingNews searches news
 class BingNews(BingMultiple):
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources': 'News',
-      'News.Count': '15',
-      'News.Offset': '0',
-      'News.SortBy': 'Relevance',
-    }
 
-    def set_offset(self, offset):
+    def init_options(self):
+        super(BingNews, self).init_options()
+        self.options.update({
+            'Sources': 'News',
+        })
+        self.set_sortby()
+
+    def set_count(self, count=15):
+        self.options.update({'News.Count':15}) #we have to hardcode it because if count>15 Bing return error
+
+    def set_offset(self, offset=0):
         self.options.update({'News.Offset':offset})
 
+    def set_sortby(self, sortby='Relevance'):
+        self.options.update({'News.SortBy':sortby})
+
 class BingNewsRelated(BingNews):
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources': 'News RelatedSearch',
-      'News.Count': '15',
-      'News.Offset': '0',
-      'News.SortBy': 'Relevance',
-    }
+
+    def init_options(self):
+        super(BingNewsRelated, self).init_options()
+        self.options.update({
+            'Sources': 'News RelatedSearch',
+        })
 
 class BingNewsRelatedSpell(BingNews):
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources': 'News RelatedSearch Spell',
-      'News.Count': '15',
-      'News.Offset': '0',
-      'News.SortBy': 'Relevance',
-    }
+
+    def init_options(self):
+        super(BingNewsRelatedSpell, self).init_options()
+        self.options.update({
+            'Sources': 'News RelatedSearch Spell',
+        })
 
 class BingWeb(BingMultiple):
     """
@@ -199,50 +196,35 @@ class BingWeb(BingMultiple):
 [u'Url', u'Title', u'DisplayUrl', u'Description', u'DateTime']
 
     """
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources':'Web',
-      'Adult': 'Moderate',
-      'Web.Count': '10', 'Web.Offset': '0',
       # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
-    }
 
-#    def __init__(self):
-#        self.options.update({
-#            'Sources':'Web',
-#            'Adult': 'Moderate',
-#            'Web.Count': '10', 'Web.Offset': '0',
-#            # 'Web.Options':'DisableHostCollapsing+DisableQueryAlterations',
-#        })
+    def init_options(self):
+        super(BingWeb, self).init_options()
+        self.options.update({
+            'Sources':'Web',
+        })
 
-    def set_count(self, count):
+    def set_count(self, count=10):
         self.options.update({'Web.Count':count})
 
-    def set_offset(self, offset):
+    def set_offset(self, offset=0):
         self.options.update({'Web.Offset':offset})
 
-    def set_adult(self, adult):
+    def set_adult(self, adult='Moderate'):
         self.options.update({'Adult':adult})
 
 class BingImage(BingWeb):
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources':'Image',
-      'Adult': 'Moderate',
-      'Image.Count': '10',
-      'Image.Offset': '0',
-    }
 
-    def set_count(self, count):
+    def init_options(self):
+        super(BingImage, self).init_options()
+        self.options.update({
+            'Sources':'Image',
+        })
+
+    def set_count(self, count=10):
         self.options.update({'Image.Count':count})
 
-    def set_offset(self, offset):
+    def set_offset(self, offset=0):
         self.options.update({'Image.Offset':offset})
 
 class BingVideo(BingWeb):
@@ -253,21 +235,16 @@ class BingVideo(BingWeb):
 [u'Title', u'SourceTitle', u'StaticThumbnail', u'ClickThroughPageUrl', u'RunTime', u'PlayUrl']
     """
 
-    options = {
-      'AppId':settings.APPID,
-      'Version':'2.2',
-      'Market':'en-US',
-      'JsonType': 'raw',
-      'Sources':'Video',
-      'Adult': 'Moderate',
-      'Video.Count': '10',
-      'Video.Offset': '0',
-    }
+    def init_options(self):
+        super(BingVideo, self).init_options()
+        self.options.update({
+            'Sources':'Video',
+        })
 
-    def set_count(self, count):
+    def set_count(self, count=10):
         self.options.update({'Video.Count':count})
 
-    def set_offset(self, offset):
+    def set_offset(self, offset=0):
         self.options.update({'Video.Offset':offset})
 
 def make_map(adict):

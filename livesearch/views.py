@@ -97,6 +97,7 @@ def multi_results(request, context_vars):
                 raise
             
             search_obj = globals()[context_vars['api'].search_model]()
+            search_obj.init_options()
             result = search_obj.fetch(query=key_words, count=advSearch.count, offset=str((int(page)-1)*advSearch.count), market=advSearch.market)
             
             paginated_res = None
