@@ -1,5 +1,6 @@
 from django.http import Http404
 from django.shortcuts import render_to_response
+from django.core.exceptions import ObjectDoesNotExist
 from livesearch.forms import SearchesForm
 from livesearch.models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch, SearchApi, BingNewsRelatedSpell, GoogleSearch
 
@@ -92,9 +93,12 @@ def multi_results(request, context_vars):
 
             if request.user.is_authenticated():
               try:
-                advSearch = AdvancedSearch.objects.get(user = request.user)
-              except:
-                raise
+                advSearch = AdvancedSearch.objects.get(muaccount = request.muaccount)
+              except ObjectDoesNotExist:
+                advSearch = AdvancedSearch()
+                advSearch.count = 10
+                advSearch.market = None
+                
             
             search_obj = globals()[context_vars['api'].search_model]()
             search_obj.init_options()

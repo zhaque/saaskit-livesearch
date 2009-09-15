@@ -392,7 +392,7 @@ class AdvancedSearch(models.Model):
     
     count = models.PositiveSmallIntegerField(choices = COUNT_CHOICE)
     market = models.CharField(max_length=5, choices = MARKETS)
-    user = models.ForeignKey(User)
+    muaccount = models.ForeignKey(MUAccount)
 
 class SearchApi(models.Model):
     SEARCH_MODELS = (
