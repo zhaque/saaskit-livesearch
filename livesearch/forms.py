@@ -1,5 +1,6 @@
 from django.utils.translation import ugettext_lazy as _
 from django import forms
+from livesearch.models import AdvancedSearch
 
 
 class SearchesForm(forms.Form):
@@ -29,3 +30,8 @@ video_search_choices=(
                             ('Date', 'Date'),
                             ('Relevance', 'Relevance'),
                       )
+
+class AdvancedSearchForm(forms.ModelForm):
+  class Meta:
+    model = AdvancedSearch
+    fields = ('count', 'market')
