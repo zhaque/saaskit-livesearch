@@ -49,7 +49,6 @@ class BaseSearch(pipes.Pipe):
         return self.get_result(response)
 
     def fetch_with_options(self, options):
-        print options
         resp = self.objects.get(options)
         if resp:
             return resp
