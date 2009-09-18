@@ -3,6 +3,7 @@ from django.shortcuts import render_to_response
 from django.core.exceptions import ObjectDoesNotExist
 from livesearch.forms import SearchesForm
 from livesearch.models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch, SearchApi, BingNewsRelatedSpell, GoogleSearch
+from django.views.generic.simple import direct_to_template
 
 
 def searches(request, results='results'):
@@ -118,5 +119,38 @@ def multi_results(request, context_vars):
                                   'q': key_words,
                                   'form': form,
                                   })
-            return render_to_response('livesearch/multi.html', context_vars)
+            return direct_to_template(request, template = 'livesearch/multi.html', extra_context = context_vars)
+    raise Http404
+
+def combined(request):
+    if request.muaccount:
+        available_apis = SearchApi.objects.filter(muaccount = request.muaccount)
+
+    if request.method == 'GET':
+        form = SearchesForm(request.GET)
+        if form.is_valid():
+            key_words = form.get_keywords()
+ 
+            if request.user.is_authenticated():
+              try:
+                advSearch = AdvancedSearch.objects.get(muaccount = request.muaccount)
+              except ObjectDoesNotExist:
+                advSearch = AdvancedSearch()
+                advSearch.market = None
+
+            results = dict()                
+            for api in available_apis:            
+              search_obj = globals()[api.search_model]()
+              search_obj.init_options()
+              result = search_obj.fetch(query=key_words, count=5, market=advSearch.market)
+              results[api.search_model] = {'result': result, 'api': api}
+
+            context_vars = {
+              'available_apis':available_apis,
+              'results': results,
+              'q': key_words,
+              'form': form,
+              'title':'Combined Search Results',
+            }
+            return direct_to_template(request, template = 'livesearch/combined.html', extra_context = context_vars)
     raise Http404

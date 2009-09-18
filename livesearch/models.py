@@ -126,7 +126,7 @@ class BingMultiple(BaseSearch):
         if hasattr(response, 'RelatedSearch') and hasattr(response.RelatedSearch, 'Results'):
             res.update({'related': response.RelatedSearch.Results})
         if hasattr(response, 'InstantAnswer') and hasattr(response.InstantAnswer, 'Results'):
-            res.update({'related': response.InstantAnswer.Results})
+            res.update({'instant': response.InstantAnswer.Results})
         if hasattr(response, "Spell") and hasattr(response.Spell, 'Results'):
             res.update({'spell': response.Spell})
         if hasattr(response, 'Errors'):
@@ -165,7 +165,8 @@ class BingNews(BingMultiple):
         self.set_sortby()
 
     def set_count(self, count=15):
-        self.options.update({'News.Count':15}) #we have to hardcode it because if count>15 Bing return error
+        if count > 15: count=15 #we have to hardcode it because if count>15 Bing return error
+        self.options.update({'News.Count':count})
 
     def set_offset(self, offset=0):
         self.options.update({'News.Offset':offset})
