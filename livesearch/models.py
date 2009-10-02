@@ -4,7 +4,21 @@ from django.conf import settings
 from django.contrib.auth.models import User
 from muaccounts.models import MUAccount
 
-class BaseSearch(pipes.Pipe):
+class BaseSearch:
+    # override it for custom fetch
+    def raw_fetch(self, query, *args, **kwargs):
+        pass
+
+    # override it for custom result parsing 
+    def get_result(self, response):
+        pass
+
+    # public method, don't override it in child classes, do it with raw_fetch instead
+    def fetch(self, query, *args, **kwargs):
+        response = self.raw_fetch(query, *args, **kwargs)
+        return self.get_result(response)
+
+class PipeSearch(BaseSearch, pipes.Pipe):
     uri = ''
     cache_expiry = 3000000000
 
@@ -29,10 +43,7 @@ class BaseSearch(pipes.Pipe):
     def set_adult(self, adult=''):
         pass
 
-    def get_result(self, response):
-        pass
-
-    def fetch(self, query, count=None, offset=None, market=None, version=None, adult=None):
+    def raw_fetch(self, query, count=None, offset=None, market=None, version=None, adult=None):
         self.set_query(query)
         if count:
             self.set_count(count)
@@ -45,8 +56,7 @@ class BaseSearch(pipes.Pipe):
         if adult:
             self.set_adult(adult)
 
-        response = self.fetch_with_options(self.options)
-        return self.get_result(response)
+        return self.fetch_with_options(self.options)
 
     def fetch_with_options(self, options):
         resp = self.objects.get(options)
@@ -54,9 +64,8 @@ class BaseSearch(pipes.Pipe):
             return resp
         return None
 
-class GoogleSearch(BaseSearch):
+class GoogleSearch(PipeSearch):
     uri = "http://ajax.googleapis.com/ajax/services/search/web"
-    cache_expiry = 3000000000
 
     def init_options(self):
         super(GoogleSearch, self).init_options()
@@ -71,7 +80,7 @@ class GoogleSearch(BaseSearch):
             res.update({'google':response.responseData.results,})
         return res
 
-class TwitterSearch(BaseSearch):
+class TwitterSearch(PipeSearch):
     uri = "http://search.twitter.com/search.json"
     cache_expiry = 300000
 
@@ -84,7 +93,7 @@ class TwitterSearch(BaseSearch):
             res.update({'twitter':response.results,})
         return res
 
-class BingMultiple(BaseSearch):
+class BingMultiple(PipeSearch):
     uri = "http://api.bing.net/json.aspx"
 
     def init_options(self):
@@ -403,6 +412,7 @@ class SearchApi(models.Model):
         ('BingVideo','Bing Video'),
         ('TwitterSearch','Twitter Search'),
         ('GoogleSearch','Google Search'),
+        ('BingNewsRelated', 'Bing News+Related'),
         ('BingNewsRelatedSpell', 'Bing News+Related+Spell'),
     )
     name = models.CharField(max_length=255)
@@ -411,4 +421,5 @@ class SearchApi(models.Model):
     search_model = models.CharField(max_length=255, choices = SEARCH_MODELS)
 
     def __unicode__(self):
-        return self.name    
+        return self.name
+  
