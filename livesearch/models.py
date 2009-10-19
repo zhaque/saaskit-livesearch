@@ -87,6 +87,9 @@ class TwitterSearch(PipeSearch):
     def set_query(self, query):
         self.options.update({'q':query})
 
+    def set_market(self, market='en-US'):
+        self.options.update({'Market':market[:2]})
+
     def get_result(self, response):
         res = dict()
         if response and hasattr(response, "results"):
@@ -101,6 +104,7 @@ class BingMultiple(PipeSearch):
         self.options.update({
             'AppId':settings.APPID,
             'JsonType': 'raw',
+            'Options': 'DisableLocationDetection',
         })
         self.set_count()
         self.set_offset()
