@@ -169,6 +169,18 @@ class BingRelated(BingMultiple):
 
 # BingNews searches news
 class BingNews(BingMultiple):
+    CATEGORIES = (
+        ('rt_Business','Business'),
+        ('rt_Entertainment','Entertainment'),
+        ('rt_Health','Health'),
+        ('rt_Political','Political'),
+        ('rt_Scientific','Scientific'),
+        ('rt_Sports','Sports'),
+        ('rt_US','US'),
+        ('rt_World','World'),
+        ('rt_Local','Local'),
+        ('rt_ScienceAndTechnology','Science and Technology'),
+    )
 
     def init_options(self):
         super(BingNews, self).init_options()
@@ -184,8 +196,11 @@ class BingNews(BingMultiple):
     def set_offset(self, offset=0):
         self.options.update({'News.Offset':offset})
 
-    def set_sortby(self, sortby='Relevance'):
+    def set_sortby(self, sortby='Date'):
         self.options.update({'News.SortBy':sortby})
+
+    def set_category(self, category):
+        self.options.update({'News.Category':category})
 
 class BingNewsRelated(BingNews):
 
@@ -253,12 +268,16 @@ class BingVideo(BingWeb):
         self.options.update({
             'Sources':'Video',
         })
+        self.set_sortby()
 
     def set_count(self, count=10):
         self.options.update({'Video.Count':count})
 
     def set_offset(self, offset=0):
         self.options.update({'Video.Offset':offset})
+
+    def set_sortby(self, sortby='Date'):
+        self.options.update({'Video.SortBy':sortby})
 
 def make_map(adict):
     """
