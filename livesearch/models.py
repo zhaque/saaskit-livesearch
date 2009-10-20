@@ -87,6 +87,14 @@ class TwitterSearch(PipeSearch):
     def set_query(self, query):
         self.options.update({'q':query})
 
+    def set_count(self, count=100):
+        self.count = count
+        self.options.update({'rpp':count})
+
+    def set_offset(self, offset=0):
+        page = int(offset/self.count) + 1
+        self.options.update({'page':page})
+
     def set_market(self, market='en-US'):
         self.options.update({'Market':market[:2]})
 
@@ -233,6 +241,7 @@ class BingWeb(BingMultiple):
         })
 
     def set_count(self, count=10):
+        if count > 50: count=50 #we have to hardcode it because if count>50 Bing return error
         self.options.update({'Web.Count':count})
 
     def set_offset(self, offset=0):
@@ -250,6 +259,7 @@ class BingImage(BingWeb):
         })
 
     def set_count(self, count=10):
+        if count > 50: count=50 #we have to hardcode it because if count>50 Bing return error
         self.options.update({'Image.Count':count})
 
     def set_offset(self, offset=0):
@@ -271,6 +281,7 @@ class BingVideo(BingWeb):
         self.set_sortby()
 
     def set_count(self, count=10):
+        if count > 50: count=50 #we have to hardcode it because if count>50 Bing return error
         self.options.update({'Video.Count':count})
 
     def set_offset(self, offset=0):
