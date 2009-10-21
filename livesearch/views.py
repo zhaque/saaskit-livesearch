@@ -2,7 +2,7 @@ from django.http import Http404
 from django.shortcuts import render_to_response
 from django.core.exceptions import ObjectDoesNotExist
 from livesearch.forms import SearchesForm
-from livesearch.models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch, SearchApi, BingNewsRelatedSpell, GoogleSearch
+from livesearch.models import BingImage, BingWeb, BingVideo, BingNews, TwitterSearch, AdvancedSearch, SearchApi, BingNewsRelatedSpell, GoogleSearch, YqlSearch
 from django.views.generic.simple import direct_to_template
 
 
@@ -52,6 +52,9 @@ def search_results(request, context_vars):
         return multi_results(request, context_vars)
     elif isinstance(searchModel, GoogleSearch):
         context_vars['title'] = 'Google Search Results'
+        return multi_results(request, context_vars)
+    elif isinstance(searchModel, YqlSearch):
+        context_vars['title'] = 'Yahoo Query Language Search Results'
         return multi_results(request, context_vars)
     raise Http404
 

@@ -40,3 +40,10 @@
     slug: google
     search_model: GoogleSearch
     muaccount: [1,2,3]
+- model: livesearch.SearchApi
+  pk: 7
+  fields:
+    name: Yql
+    slug: yql
+    search_model: YqlSearch
+    muaccount: [2,3]

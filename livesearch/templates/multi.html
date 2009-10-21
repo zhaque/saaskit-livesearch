@@ -87,4 +87,9 @@
 </dl>
 {% endif %}
 
+{% if results.yql %}
+<h1>Yql ({{ results.yql.count }})</h1>
+{{ results.yql.results }}
+{% endif %}
+
 {%endblock%}
