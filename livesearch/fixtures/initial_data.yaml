@@ -1,0 +1,42 @@
+- model: livesearch.SearchApi
+  pk: 1
+  fields:
+    name: Bing Web
+    slug: bing-web
+    search_model: BingWeb
+    muaccount: [1,2,3]
+- model: livesearch.SearchApi
+  pk: 2
+  fields:
+    name: Twitter
+    slug: twitter
+    search_model: TwitterSearch
+    muaccount: [2,3]
+- model: livesearch.SearchApi
+  pk: 3
+  fields:
+    name: Bing News
+    slug: bing-news
+    search_model: BingNewsRelatedSpell
+    muaccount: [2,3]
+- model: livesearch.SearchApi
+  pk: 4
+  fields:
+    name: Bing Image
+    slug: bing-image
+    search_model: BingImage
+    muaccount: [2,3]
+- model: livesearch.SearchApi
+  pk: 5
+  fields:
+    name: Bing Video
+    slug: bing-video
+    search_model: BingVideo
+    muaccount: [2,3]
+- model: livesearch.SearchApi
+  pk: 6
+  fields:
+    name: Google
+    slug: google
+    search_model: GoogleSearch
+    muaccount: [1,2,3]
