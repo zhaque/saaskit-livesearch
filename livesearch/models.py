@@ -43,6 +43,15 @@ class PipeSearch(BaseSearch, pipes.Pipe):
     def set_adult(self, adult=''):
         pass
 
+    def set_longitude(self, longitude):
+        pass
+
+    def set_latitude(self, latitude):
+        pass
+
+    def set_radius(self, radius):
+        pass
+
     def raw_fetch(self, query, count=None, offset=None, market=None, version=None, adult=None):
         self.set_query(query)
         if count:
@@ -125,8 +134,25 @@ class TwitterSearch(PipeSearch):
         page = int(offset/self.count) + 1
         self.options.update({'page':page})
 
+    def set_longitude(self, longitude):
+        self.longitude = longitude
+        self.set_geocode()
+
+    def set_latitude(self, latitude):
+        self.latitude = latitude
+        self.set_geocode()
+
+    def set_radius(self, radius):
+        self.radius = radius
+        self.set_geocode()
+
+    def set_geocode(self):
+        if hasattr(self,'longitude') and hasattr(self,'latitude') and hasattr(self,'radius'):
+            geocode = '%s,%s,%smi' % (self.latitude, self.longitude, self.radius)
+            self.options.update({'geocode':geocode})
+
     def set_market(self, market='en-US'):
-        self.options.update({'Market':market[:2]})
+        self.options.update({'lang':market[:2]})
 
     def get_result(self, response):
         res = dict()
@@ -158,6 +184,18 @@ class BingMultiple(PipeSearch):
 
     def set_version(self, version='2.2'):
         self.options.update({'Version':version})
+
+    def set_longitude(self, longitude):
+        if longitude:
+            self.options.update({'Longitude':longitude})
+
+    def set_latitude(self, latitude):
+        if latitude:
+            self.options.update({'Latitude':latitude})
+
+    def set_radius(self, radius):
+        if radius:
+            self.options.update({'Radius':radius})
 
     def get_result(self, response):
         if response and hasattr(response, "SearchResponse"):
